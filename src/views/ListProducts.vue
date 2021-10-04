@@ -31,31 +31,40 @@
 
                 <v-card-text>
                   <v-container>
+                     <v-form  ref="form">
                     <v-row>
                       <v-col cols="12" sm="6" md="4">
                         <v-text-field
                           v-model="editedItem.ProductName"
                           autocomplete="nope"
                           label="Product Name"
+                         :rules="productNameRules"
+                          required
+
                         ></v-text-field>
+                      
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
                         <v-text-field
                           v-model="editedItem.SupplierId"
                           label="Supplier ID"
+                        
+                         :rules="supplierRules"
+ required
                           autocomplete="off"
-                         
                         ></v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
                         <v-text-field
                           v-model="editedItem.UnitPrice"
-                        autocomplete="off"
+                          autocomplete="off"
                           label="Unit Price"
+  :rules="unitPriceRules"
+                        
                         ></v-text-field>
                       </v-col>
-                     
                     </v-row>
+                     </v-form>
                   </v-container>
                 </v-card-text>
 
@@ -98,20 +107,25 @@
         </template>
       </v-data-table>
     </v-container>
+
+
+    <v-alert :value="alert" :type="alertType"> {{alertMessage}} </v-alert>
+
   </div>
 </template>
 
 <script>
 import axios from "axios";
 
+
+
 export default {
   data: () => ({
-
     products: [],
 
-    productID :-1,
+    productID: -1,
 
-    editedId:-1,
+    editedId: -1,
 
     dialog: false,
 
@@ -126,29 +140,53 @@ export default {
       { text: "Actions", value: "actions", sortable: false },
     ],
 
-
     editedIndex: -1,
 
     editedItem: {
 
-      ProductName:null,
-
-      SupplierId:null,
-
-      UnitPrice:null,
- 
-    },
-
-    defaultItem: {
-
-        ProductName: null,
+      ProductName: null,
 
       SupplierId: null,
 
       UnitPrice:null,
-
     },
+
+    defaultItem: {
+
+      ProductName: null,
+
+      SupplierId: null,
+
+      UnitPrice: null,
+    },
+
+    productNameRules:[
+
+      v => !!v || 'the product name is required and cannot be empty'
+    ] ,
+
+    supplierRules:[
+
+      v => !!v || 'the supplier is required and cannot be empty'
+    ] ,
+
+    unitPriceRules:[
+
+      v => !!v || 'the unit Price is required and cannot be empty' ,
+      v => ( v > 0  ) || 'the price must be a positive number'
+    ] ,
+
+    alert: false,
+    alertType : null ,
+    alertMessage:'',
+
+
+
   }),
+
+  
+
+
 
   computed: {
     formTitle() {
@@ -158,9 +196,7 @@ export default {
 
   watch: {
     dialog(val) {
-
       val || this.close();
-
     },
     dialogDelete(val) {
       val || this.closeDelete();
@@ -168,15 +204,37 @@ export default {
   },
 
   created() {
-    
-
     this.loadProducts();
   },
 
+  mounted(){
+
+   
+    if(alert){
+      this.hide_alert();
+    }
+  
+  } ,
+
   methods: {
 
-    loadProducts() {
+     hide_alert: function (event) {
 
+       console.log(event);
+
+      console.log('Hide')
+      // `event` is the native DOM event
+      window.setInterval(() => {
+
+         this.alert = false;
+         this.alertType = null ,
+         this.alertMessage = '',
+
+        console.log("hide alert after 3 seconds");
+      }, 5000)    
+    }
+    ,
+    loadProducts() {
       axios
         .get("/api/product")
         .then((response) => {
@@ -190,12 +248,11 @@ export default {
         .finally(() => {});
     },
 
-  
     editItem(item) {
 
-      this.productID = item.ID ,
-
-      console.log(item)
+      this.productID = item.ID;
+      
+      console.log(item);
 
       this.editedIndex = this.products.indexOf(item);
 
@@ -203,165 +260,191 @@ export default {
 
       this.dialog = true;
 
-
     },
 
     deleteItem(item) {
-
       let ID = item.ID;
 
-      this.editedId = ID ;
+      this.editedId = ID;
 
       this.dialogDelete = true;
-
-
     },
 
     deleteItemConfirm() {
-
-      let ID = this.editedId
+      let ID = this.editedId;
 
       console.log(ID);
 
-      axios.delete('/api/product/'+ID).then((response) => {
+      axios
+        .delete("/api/product/" + ID)
+        .then((response) => {
 
-          let status  = response.status;
 
-          console.log( status );
+      // delete object local after success api
+      
+      const productIndex = this.products.findIndex((p) => p.ID === ID);
+
+      // remove one product
+
+      this.products.splice(productIndex, 1);
+
+         this.alert = true;
+
+         this.alertType = 'success' ,
+
+         this.alertMessage = ' success operation',
+
+      console.log(response);
 
         })
         .catch((error) => {
 
-          console.log(error);
+         this.alert = true;
 
+         this.alertType = 'error' ,
+
+         this.alertMessage = ' error operation',
+
+          console.log(error);
         })
         .finally(() => {});
 
-        const productIndex = this.products.findIndex(p => p.ID === ID)
+     
 
-
-        // remove one product
-
-        this.products.splice(productIndex, 1)
-
-        this.closeDelete();
-
+      this.closeDelete();
     },
 
     close() {
-
       this.dialog = false;
       this.$nextTick(() => {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.editedIndex = -1;
-
       });
+
+      this.$refs.form.reset()
     },
 
     closeDelete() {
-
       this.dialogDelete = false;
-
-      
     },
 
     save() {
 
 
-      if (this.editedIndex > -1) { // update product
+    if (this.$refs.form.validate()){
 
+      if (this.editedIndex > -1) {
+        // update product
 
+        //   console.log('update');
 
-           
+        // validation 
 
-            //   console.log('update');
-             
-            // update aray
+        
+
+       
+
+        // update api
+
+        let ID = this.productID;
+
+        console.log(ID);
+
+        axios
+          .put("/api/product/" + ID, {
+            ProductName: this.editedItem.ProductName,
+
+            supplier_id: this.editedItem.SupplierId,
+
+            UnitPrice: this.editedItem.UnitPrice,
+          })
+          .then((response) => {
+            let status = response.status;
+
+             // update local  after success api
 
              Object.assign(this.products[this.editedIndex], this.editedItem);
 
-            // update api
+              this.alert = true;
 
-          let ID = this.productID ;
+         this.alertType = 'success' ,
 
-          console.log(ID);
+         this.alertMessage = ' success operation',
 
-          axios.put('/api/product/'+ID , {
+            console.log(status);
+          })
+          .catch((error) => {
 
-  
-          ProductName: this.editedItem.ProductName,
+             this.alert = true;
 
-          supplier_id: this.editedItem.SupplierId,
+         this.alertType = 'error' ,
 
-          UnitPrice: this.editedItem.UnitPrice,
+         this.alertMessage = ' error operation',
+            console.log(error);
+          })
+          .finally(() => {});
 
-        } ).then((response) => {
+        this.productID = -1;
+      } else {
+        // create product
 
-          let status  = response.status;
+        //console.log('create');
 
-          console.log( status );
+    
 
-        })
-        .catch((error) => {
+        //
 
-          console.log(error);
+        axios
+          .post("/api/product/", {
+            ProductName: this.editedItem.ProductName,
 
-        })
-        .finally(() => {});
+            SupplierId: this.editedItem.SupplierId,
 
-        this.productID = -1 ;
+            UnitPrice: this.editedItem.UnitPrice,
+          })
+          .then((response) => {
 
-           
+            let status = response.status;
 
+        // create local  after success api
+        let $lastID = this.products[this.products.length - 1].ID;
 
+        this.editedItem["ID"] = $lastID + 1;
 
+        this.products.push(this.editedItem);
 
-      } else { // create product
+        this.alert = true;
 
+         this.alertType = 'success' ,
 
-         //console.log('create');
+         this.alertMessage = ' success operation',
 
-         let $lastID = this.products[this.products.length - 1].ID;
+            console.log(status);
+          })
+          .catch((error) => {
 
-         this.editedItem['ID'] = $lastID + 1; 
+             this.alert = true;
 
-         this.products.push(this.editedItem);
+         this.alertType = 'error' ,
 
-         // 
-
-        axios.post('/api/product/' , {
-
-  
-          ProductName: this.editedItem.ProductName,
-
-           
-          SupplierId: this.editedItem.SupplierId,
-
-          UnitPrice: this.editedItem.UnitPrice,
-
-        } ).then((response) => {
-
-          let status  = response.status;
-
-          console.log( status );
-
-        })
-        .catch((error) => {
-
-          console.log(error);
-
-        })
-        .finally(() => {});
-
-         
-
-        
+         this.alertMessage = ' error operation',
+            console.log(error);
+          })
+          .finally(() => {});
       }
 
       this.close();
+    }
 
-    },
+     
+
+    }
   },
+
+  
+
+   
+  
 };
 </script>
 
