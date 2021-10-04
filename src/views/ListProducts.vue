@@ -35,6 +35,7 @@
                       <v-col cols="12" sm="6" md="4">
                         <v-text-field
                           v-model="editedItem.ProductName"
+                          autocomplete="nope"
                           label="Product Name"
                         ></v-text-field>
                       </v-col>
@@ -42,11 +43,14 @@
                         <v-text-field
                           v-model="editedItem.SupplierId"
                           label="Supplier ID"
+                          autocomplete="off"
+                         
                         ></v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
                         <v-text-field
                           v-model="editedItem.UnitPrice"
+                        autocomplete="off"
                           label="Unit Price"
                         ></v-text-field>
                       </v-col>
@@ -127,28 +131,28 @@ export default {
 
     editedItem: {
 
-      ProductName:'',
+      ProductName:null,
 
-      SupplierId:0,
+      SupplierId:null,
 
-      UnitPrice:0,
+      UnitPrice:null,
  
     },
 
     defaultItem: {
 
-        ProductName: '',
+        ProductName: null,
 
-      SupplierId: 0,
+      SupplierId: null,
 
-      UnitPrice:0,
+      UnitPrice:null,
 
     },
   }),
 
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "New Item" : "Edit Item";
+      return this.editedIndex === -1 ? "New Product" : "Edit Product";
     },
   },
 
