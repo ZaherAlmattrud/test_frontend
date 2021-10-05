@@ -12,7 +12,7 @@
             <v-toolbar-title>My Products</v-toolbar-title>
             <v-divider class="mx-4" inset vertical></v-divider>
             <v-spacer></v-spacer>
-            <v-dialog v-model="dialog" max-width="500px">
+            <v-dialog v-model="dialog" max-width="800px">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
                   color="primary"
@@ -35,29 +35,32 @@
                     <v-row>
                       <v-col cols="12" sm="6" md="4">
                         <v-text-field
-                          v-model="editedItem.ProductName"
+                          v-model="product.ProductName"
                           autocomplete="nope"
                           label="Product Name"
                          :rules="productNameRules"
                           required
+                          outlined
 
                         ></v-text-field>
                       
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
                         <v-text-field
-                          v-model="editedItem.SupplierId"
+                          v-model="product.supplier_id"
                           label="Supplier ID"
                         
                          :rules="supplierRules"
+                         outlined
  required
                           autocomplete="off"
                         ></v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
                         <v-text-field
-                          v-model="editedItem.UnitPrice"
+                          v-model="product.UnitPrice"
                           autocomplete="off"
+                          outlined
                           label="Unit Price"
   :rules="unitPriceRules"
                         
@@ -70,10 +73,10 @@
 
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn color="blue darken-1" text @click="close">
+                  <v-btn color="error"   @click="close">
                     Cancel
                   </v-btn>
-                  <v-btn color="blue darken-1" text @click="save"> Save </v-btn>
+                  <v-btn color="success"   @click="save"> Save </v-btn>
                 </v-card-actions>
               </v-card>
             </v-dialog>
@@ -109,7 +112,11 @@
     </v-container>
 
 
-    <v-alert :value="alert" :type="alertType"> {{alertMessage}} </v-alert>
+    <v-alert :value="alert_1" type="success"> Success </v-alert>
+
+    <v-alert :value="alert_2" type="error"> {{ backEndErrorMessage}} , {{backEndErrorMessageDetails.supplier_id_message}}  
+
+          </v-alert>
 
   </div>
 </template>
@@ -121,11 +128,33 @@ import axios from "axios";
 
 export default {
   data: () => ({
+
     products: [],
 
-    productID: -1,
+    index : -1 ,
 
-    editedId: -1,
+    product: {
+
+      ID : null ,
+
+      ProductName: null,
+
+      supplier_id: null,
+
+      UnitPrice:null,
+    },
+
+    defaultProduct:{
+
+      ID : null ,
+
+      ProductName: null,
+
+      supplier_id: null,
+
+      UnitPrice:null,
+
+    } ,
 
     dialog: false,
 
@@ -134,31 +163,17 @@ export default {
     headers: [
       { text: "ID", value: "ID", sortable: false },
       { text: "Product Name", value: "ProductName", sortable: false },
-      { text: "Supplier ID", value: "SupplierId", sortable: false },
+      { text: "Supplier ID", value: "supplier_id", sortable: false },
       { text: "Unit Price", value: "UnitPrice", sortable: false },
 
       { text: "Actions", value: "actions", sortable: false },
     ],
 
-    editedIndex: -1,
+   
 
-    editedItem: {
+  
 
-      ProductName: null,
-
-      SupplierId: null,
-
-      UnitPrice:null,
-    },
-
-    defaultItem: {
-
-      ProductName: null,
-
-      SupplierId: null,
-
-      UnitPrice: null,
-    },
+   
 
     productNameRules:[
 
@@ -176,10 +191,20 @@ export default {
       v => ( v > 0  ) || 'the price must be a positive number'
     ] ,
 
-    alert: false,
-    alertType : null ,
-    alertMessage:'',
+    alert_1: false,
 
+    alert_2: false,
+
+    backEndErrorMessage:'',
+
+    backEndErrorMessageDetails:{
+
+          product_name_message : '',
+
+          supplier_id_message : '' ,
+
+          unit_price_message : '',
+    }
 
 
   }),
@@ -190,7 +215,7 @@ export default {
 
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "New Product" : "Edit Product";
+      return this.index === -1 ? "New Product" : "Edit Product";
     },
   },
 
@@ -204,6 +229,7 @@ export default {
   },
 
   created() {
+
     this.loadProducts();
   },
 
@@ -226,12 +252,11 @@ export default {
       // `event` is the native DOM event
       window.setInterval(() => {
 
-         this.alert = false;
-         this.alertType = null ,
-         this.alertMessage = '',
+         this.alert_1 = false;
+         this.alert_2 = false;
 
         console.log("hide alert after 3 seconds");
-      }, 5000)    
+      }, 10000)    
     }
     ,
     loadProducts() {
@@ -243,6 +268,7 @@ export default {
           console.log(this.products);
         })
         .catch((error) => {
+
           console.log(error);
         })
         .finally(() => {});
@@ -250,30 +276,35 @@ export default {
 
     editItem(item) {
 
-      this.productID = item.ID;
+
+
       
-      console.log(item);
+      this.product = Object.assign({},item );
 
-      this.editedIndex = this.products.indexOf(item);
+      this.index = this.products.indexOf(item);
 
-      this.editedItem = Object.assign({}, item);
+      console.log("index : "+this.index)
 
       this.dialog = true;
 
     },
 
     deleteItem(item) {
-      let ID = item.ID;
 
-      this.editedId = ID;
+      
+     // this.editedItem = Object.assign({}, item);
+      this.product = Object.assign({},item );
+
+     // this.editedIndex = this.products.indexOf(item);
+      this.index = this.products.indexOf(item);
 
       this.dialogDelete = true;
     },
 
     deleteItemConfirm() {
-      let ID = this.editedId;
 
-      console.log(ID);
+
+      let ID = this.product.ID;
 
       axios
         .delete("/api/product/" + ID)
@@ -282,161 +313,141 @@ export default {
 
       // delete object local after success api
       
-      const productIndex = this.products.findIndex((p) => p.ID === ID);
+      this.products.splice(this.index, 1);
 
-      // remove one product
+      this.alert_1 = true;
 
-      this.products.splice(productIndex, 1);
+        
 
-         this.alert = true;
-
-         this.alertType = 'success' ,
-
-         this.alertMessage = ' success operation',
 
       console.log(response);
 
         })
         .catch((error) => {
 
-         this.alert = true;
-
-         this.alertType = 'error' ,
-
-         this.alertMessage = ' error operation',
+         this.alert_2 = true;
 
           console.log(error);
         })
-        .finally(() => {});
+        .finally(() => {
 
      
+             
+        });
 
       this.closeDelete();
+
     },
 
     close() {
+
       this.dialog = false;
       this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
+
+        this.product = Object.assign({}, this.defaultProduct);
+       
       });
 
       this.$refs.form.reset()
     },
 
     closeDelete() {
+
       this.dialogDelete = false;
+
+      this.index = -1 ;
+
     },
 
     save() {
 
 
+
     if (this.$refs.form.validate()){
 
-      if (this.editedIndex > -1) {
-        // update product
-
-        //   console.log('update');
-
-        // validation 
-
+      if (this.index > -1) { // update
         
+        let ID = this.product.ID;
+
+        let indx = this.index;
 
        
 
-        // update api
-
-        let ID = this.productID;
-
-        console.log(ID);
-
         axios
-          .put("/api/product/" + ID, {
-            ProductName: this.editedItem.ProductName,
-
-            supplier_id: this.editedItem.SupplierId,
-
-            UnitPrice: this.editedItem.UnitPrice,
-          })
+          .put("/api/product/" + ID, this.product)
           .then((response) => {
-            let status = response.status;
 
-             // update local  after success api
+            this.product = response.data.data;
 
-             Object.assign(this.products[this.editedIndex], this.editedItem);
+             // update product local in array  after success api
+        
 
-              this.alert = true;
+             Object.assign( this.products[indx], this.product);
 
-         this.alertType = 'success' ,
+             this.alert_1 = true;
 
-         this.alertMessage = ' success operation',
-
-            console.log(status);
+          
           })
           .catch((error) => {
 
-             this.alert = true;
+            
 
-         this.alertType = 'error' ,
+             this.alert_2 = true;
 
-         this.alertMessage = ' error operation',
-            console.log(error);
+             console.log(error.response.data.details);
+
+             this.backEndErrorMessage = error.response.data.message ;
+
+             this.backEndErrorMessageDetails.supplier_id_message = error.response.data.details.supplier_id[0] ;
+
+            
+               
+
+
           })
           .finally(() => {});
 
-        this.productID = -1;
-      } else {
-        // create product
+                this.index = -1 ;
 
-        //console.log('create');
-
-    
-
+      } else { // create 
+        
         //
 
         axios
-          .post("/api/product/", {
-            ProductName: this.editedItem.ProductName,
-
-            SupplierId: this.editedItem.SupplierId,
-
-            UnitPrice: this.editedItem.UnitPrice,
-          })
+          .post("/api/product/",this.product)
           .then((response) => {
 
-            let status = response.status;
+            let newProduct = response.data.data;
 
         // create local  after success api
-        let $lastID = this.products[this.products.length - 1].ID;
+       
 
-        this.editedItem["ID"] = $lastID + 1;
+        this.products.push( newProduct );
 
-        this.products.push(this.editedItem);
+        this.alert_1 = true;
 
-        this.alert = true;
-
-         this.alertType = 'success' ,
-
-         this.alertMessage = ' success operation',
-
-            console.log(status);
+         
           })
           .catch((error) => {
 
-             this.alert = true;
+             this.alert_2 = true;
+             console.log(error.response.data.details);
 
-         this.alertType = 'error' ,
+             this.backEndErrorMessage = error.response.data.message ;
 
-         this.alertMessage = ' error operation',
+             this.backEndErrorMessageDetails.supplier_id_message = error.response.data.details.supplier_id[0] ;
+
+
+        
             console.log(error);
           })
           .finally(() => {});
       }
 
-      this.close();
+     
     }
 
-     
+      this.close();
 
     }
   },
