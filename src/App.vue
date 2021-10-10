@@ -97,9 +97,9 @@ export default {
 
         pages: [
 
-          { title: 'List Products', icon:  mdiViewDashboardOutline , route:'/' },
+          { title: 'Products', icon:  mdiViewDashboardOutline , route:'/' },
 
-          { title: 'List Orders', icon:  mdiViewDashboardOutline , route:'/ListOrders' },
+          { title: 'Orders', icon:  mdiViewDashboardOutline , route:'/ListOrders' },
          
          
           

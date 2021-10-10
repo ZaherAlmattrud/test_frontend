@@ -10,6 +10,10 @@
 
  import ListOrders from '../views/ListOrders.vue'
 
+ import CreateOrder from '../views/CreateOrder.vue'
+
+
+
  const Routes = [
 
   // ListProducts route
@@ -31,6 +35,17 @@
     path: '/ListOrders',
     name: 'ListOrders',
     component: ListOrders ,
+
+    meta:{
+    //  middleware:"guest",
+
+   }
+  } ,
+
+  {
+    path: '/CreateOrder',
+    name: 'CreateOrder',
+    component: CreateOrder ,
 
     meta:{
     //  middleware:"guest",

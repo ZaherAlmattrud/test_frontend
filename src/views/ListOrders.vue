@@ -1,230 +1,201 @@
 <template>
-
   <div class="page">
     <v-container>
+      <v-data-table
+        :headers="headers"
+        :items="orders"
+        sort-by="calories"
+        class="elevation-1"
+      >
+        <template v-slot:top>
+          <v-toolbar flat>
+            <v-toolbar-title>My Orders</v-toolbar-title>
+            <v-divider class="mx-4" inset vertical></v-divider>
+            <v-spacer></v-spacer>
+            
+                <v-btn
+                  color="primary"
+                  dark
+                  class="mb-2"
+                  v-bind="attrs"
+                  v-on="on"
 
-         <v-data-table
-    :headers="headers"
-    :items="orders"
-    sort-by="calories"
-    class="elevation-1"
-  >
-    <template v-slot:top>
-      <v-toolbar
-        flat
-      >
-        <v-toolbar-title>My Orders</v-toolbar-title>
-        <v-divider
-          class="mx-4"
-          inset
-          vertical
-        ></v-divider>
-        <v-spacer></v-spacer>
-        <v-dialog
-          v-model="dialog"
-          max-width="500px"
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              color="primary"
-              dark
-              class="mb-2"
-              v-bind="attrs"
-              v-on="on"
-            >
-              New Order
-            </v-btn>
-          </template>
-          <v-card>
-            <v-card-title>
-              <span class="text-h5">{{ formTitle }}</span>
-            </v-card-title>
-
-            <v-card-text>
-              <v-container>
-                <v-row>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
+                  @click="create()"
+                >
+                  New Orders
+                </v-btn>
+            
+        
+            <v-dialog v-model="dialogDelete" max-width="500px">
+              <v-card>
+                <v-card-title class="text-h5"
+                  >Are you sure you want to delete this item?</v-card-title
+                >
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="closeDelete"
+                    >Cancel</v-btn
                   >
-                    <v-text-field
-                      v-model="editedItem.name"
-                      label="Dessert name"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
+                  <v-btn color="blue darken-1" text @click="deleteItemConfirm"
+                    >OK</v-btn
                   >
-                    <v-text-field
-                      v-model="editedItem.calories"
-                      label="Calories"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  >
-                    <v-text-field
-                      v-model="editedItem.fat"
-                      label="Fat (g)"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  >
-                    <v-text-field
-                      v-model="editedItem.carbs"
-                      label="Carbs (g)"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  >
-                    <v-text-field
-                      v-model="editedItem.protein"
-                      label="Protein (g)"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card-text>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="blue darken-1"
-                text
-                @click="close"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
-                color="blue darken-1"
-                text
-                @click="save"
-              >
-                Save
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-        <v-dialog v-model="dialogDelete" max-width="500px">
-          <v-card>
-            <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-              <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-      </v-toolbar>
-    </template>
-    <template v-slot:item.actions="{ item }">
-      <v-icon
-        small
-        class="mr-2"
-        @click="editItem(item)"
-      >
-        mdi-pencil
-      </v-icon>
-      <v-icon
-        small
-        @click="deleteItem(item)"
-      >
-        mdi-delete
-      </v-icon>
-    </template>
-    <template v-slot:no-data>
-      <v-btn
-        color="primary"
-        @click="initialize"
-      >
-        Reset
-      </v-btn>
-    </template>
-  </v-data-table>
+                  <v-spacer></v-spacer>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-toolbar>
+        </template>
+        <template v-slot:item.actions="{ item }">
+          <v-icon small class="mr-2" @click="editItem(item)">
+            mdi-pencil
+          </v-icon>
+          <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+        </template>
+        <template v-slot:no-data>
+          <v-btn color="primary" @click="loadOrders"> Reset </v-btn>
+        </template>
+      </v-data-table>
     </v-container>
 
-  </div>
-  
 
+    <v-alert :value="alert_1" type="success"> Success </v-alert>
+
+    <v-alert :value="alert_2" type="error"> {{ backEndErrorMessage}} , {{backEndErrorMessageDetails.supplier_id_message}}  
+
+          </v-alert>
+
+  </div>
 </template>
 
 <script>
 import axios from "axios";
 
- export default {
-    data: () => ({
 
-      orders: [], 
 
-      dialog: false,
-      dialogDelete: false,
-      headers: [
-       
-        { text: 'Number', value: 'OrderNumber' },
-         { text: 'Customer', value: 'customer_id' },
-          { text: 'Date', value: 'OrderDate' },
-           { text: 'Total', value: 'TotalAmount' },
-        { text: 'Actions', value: 'actions', sortable: false },
-      ],
-      desserts: [],
-      editedIndex: -1,
-      editedItem: {
-        name: '',
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0,
-      },
-      defaultItem: {
-        name: '',
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0,
-      },
-    }),
+export default {
+  data: () => ({
 
-    computed: {
-      formTitle () {
-        return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
-      },
+    orders: [],
+
+    index : -1 ,
+
+    order: {
+
+      ID : null ,
+
+      OrderDate: null,
+
+      OrderNumber: null,
+
+      customer_id:null,
+
+      TotalAmount:null,
     },
 
-    watch: {
-      dialog (val) {
-        val || this.close()
-      },
-      dialogDelete (val) {
-        val || this.closeDelete()
-      },
+    defaultOrder:{
+
+      id : null ,
+
+      OrderDate: null,
+
+      OrderNumber: null,
+
+      customer_id:null,
+
+      TotalAmount:null,
+
+    } ,
+
+    dialog: false,
+
+    dialogDelete: false,
+
+    headers: [
+      { text: "Number", value: "OrderNumber", sortable: false },
+      { text: "Customer", value: "customer_id", sortable: false },
+      { text: "Date", value: "OrderDate", sortable: false },
+      { text: "Total", value: "TotalAmount", sortable: false },
+
+      { text: "Actions", value: "actions", sortable: false },
+    ],
+
+   
+
+    alert_1: false,
+
+    alert_2: false,
+
+    backEndErrorMessage:'',
+
+    backEndErrorMessageDetails:{
+
+          product_name_message : '',
+
+          supplier_id_message : '' ,
+
+          unit_price_message : '',
+    }
+
+
+  }),
+
+  
+
+
+
+  computed: {
+    formTitle() {
+      return this.index === -1 ? "New Order" : "Edit Order";
     },
+  },
 
-    created () {
-
-      this.loadOrders()
+  watch: {
+    dialog(val) {
+      val || this.close();
     },
+    dialogDelete(val) {
+      val || this.closeDelete();
+    },
+  },
 
-    methods: {
-      loadOrders() {
+  created() {
+
+    this.loadOrders();
+  },
+
+  mounted(){
+
+   
+    if(alert){
+      this.hide_alert();
+    }
+  
+  } ,
+
+  methods: {
+
+     hide_alert: function (event) {
+
+       console.log(event);
+
+      console.log('Hide')
+      // `event` is the native DOM event
+      window.setInterval(() => {
+
+         this.alert_1 = false;
+         this.alert_2 = false;
+
+        console.log("hide alert after 3 seconds");
+      }, 10000)    
+    }
+    ,
+    loadOrders() {
       axios
         .get("/api/order")
         .then((response) => {
-
           this.orders = response.data.data;
 
-          
+          console.log(this.orders);
         })
         .catch((error) => {
 
@@ -233,53 +204,112 @@ import axios from "axios";
         .finally(() => {});
     },
 
-      editItem (item) {
-        this.editedIndex = this.desserts.indexOf(item)
-        this.editedItem = Object.assign({}, item)
-        this.dialog = true
-      },
+    editItem(item) {
 
-      deleteItem (item) {
-        this.editedIndex = this.desserts.indexOf(item)
-        this.editedItem = Object.assign({}, item)
-        this.dialogDelete = true
-      },
+     console.log(item);
+   
 
-      deleteItemConfirm () {
-        this.desserts.splice(this.editedIndex, 1)
-        this.closeDelete()
-      },
+    },
 
-      close () {
-        this.dialog = false
-        this.$nextTick(() => {
-          this.editedItem = Object.assign({}, this.defaultItem)
-          this.editedIndex = -1
+    deleteItem(item) {
+
+      
+     // this.editedItem = Object.assign({}, item);
+      this.order = Object.assign({},item );
+
+     // this.editedIndex = this.products.indexOf(item);
+      this.index = this.orders.indexOf(item);
+
+      this.dialogDelete = true;
+    },
+
+    deleteItemConfirm() {
+
+
+      let ID = this.order.ID;
+
+      console.log('ID : '+ID)
+
+      axios
+        .delete("/api/order/" + ID)
+        .then((response) => {
+
+
+      // delete object local after success api
+      
+      this.orders.splice(this.index, 1);
+
+      this.alert_1 = true;
+
+      console.log(response);
+
         })
-      },
+        .catch((error) => {
 
-      closeDelete () {
-        this.dialogDelete = false
-        this.$nextTick(() => {
-          this.editedItem = Object.assign({}, this.defaultItem)
-          this.editedIndex = -1
+         this.alert_2 = true;
+
+          console.log(error);
         })
-      },
+        .finally(() => {
 
-      save () {
-        if (this.editedIndex > -1) {
-          Object.assign(this.desserts[this.editedIndex], this.editedItem)
-        } else {
-          this.desserts.push(this.editedItem)
-        }
-        this.close()
-      },
-    },}
+     
+             
+        });
+
+      this.closeDelete();
+
+    },
+
+    close() {
+
+      this.dialog = false;
+
+      this.$nextTick(() => {
+
+        this.order = Object.assign({}, this.defaultOrder);
+       
+      });
+
+      this.$refs.form.reset()
+    },
+
+    closeDelete() {
+
+      this.dialogDelete = false;
+
+      this.index = -1 ;
+
+    },
+
+    create(){
+
+         this.$router.push('/CreateOrder')
+    },
+
+    save() {
+
+
+
+     
+
+      if (this.index > -1) { // update
+        
+        
+
+      } else { // create 
+        
+      }
+  },
+
+  
+  }
+   
+  
+};
 </script>
 
-<style>
+<style >
 .page {
   margin-right: 255px;
 }
-
 </style>
